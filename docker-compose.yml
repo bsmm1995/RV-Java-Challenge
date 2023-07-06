@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+
+  vehicle-challenge:
+    container_name: vehicle-api
+    build:
+      context: vehicle-challenge/.
+    ports:
+      - 8091:8091
+    networks:
+      - nttdata
+    env_file:
+      - api.env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  conversion-challenge:
+    container_name: conversion-api
+    build:
+      context: conversion-challenge/.
+    ports:
+      - 8092:8092
+    networks:
+      - nttdata
+    env_file:
+      - api.env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  purchase-challenge:
+    container_name: purchase-api
+    build:
+      context: purchase-challenge/.
+    ports:
+      - 8093:8093
+    networks:
+      - nttdata
+    env_file:
+      - api.env
+    depends_on:
+      db:
+        condition: service_healthy
+  
+  report-challenge:
+    container_name: report-api
+    build:
+      context: report-challenge/.
+    ports:
+      - 8094:8094
+    networks:
+      - nttdata
+    env_file:
+      - api.env
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: 'postgres:latest'
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U zepolar" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - 5432:5432
+    env_file:
+      - db.env
+    volumes:
+      - ./init-multi-postgres-databases.sh:/docker-entrypoint-initdb.d/init-multi-postgres-databases.sh
+    networks:
+      - nttdata
+
+  db-client-challenge:
+    image: adminer
+    container_name: adminer_challenge
+    ports:
+      - 8080:8080
+    networks:
+      - nttdata
+      
+  rabbitmq:
+    image: rabbitmq:3.9.10-management
+    ports:
+      - 5672:5672  # RabbitMQ default port
+      - 15672:15672  # RabbitMQ management plugin port
+    environment:
+      RABBITMQ_DEFAULT_USER: admin  # RabbitMQ username
+      RABBITMQ_DEFAULT_PASS: password  # RabbitMQ password
+    networks:
+      - nttdata
+      
+  
+
+volumes:
+  db:
+
+networks:
+  nttdata:
